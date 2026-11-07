@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orquestra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #0b0d12; --panel: #12151d; --panel2: #181c26; --line: #252a37; --ink: #e8ebf2; --dim: #8a92a6; --faint: #555d70;
+  --opus: #ff8a3d; --fable: #c27bff; --sonnet: #4fa3ff; --haiku: #2fd3a0; --eu: #ffd34d; --zera: #00dcff;
+  --ok: #34d17a; --bad: #ff5468; --font: "Inter", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--font) }
+button, select, input, textarea { font: inherit; color: inherit }
+.app { display: grid; grid-template-columns: 200px 1fr 400px; grid-template-rows: 54px 1fr; height: 100vh }
+header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #11141c, #0d1017) }
+.logo { font-weight: 700; letter-spacing: .5px; display: flex; align-items: center; gap: 9px; font-size: 16px }
+.logo i { width: 22px; height: 22px; border-radius: 7px; background: conic-gradient(var(--opus), var(--fable), var(--sonnet), var(--haiku), var(--opus)) }
+header .sp { flex: 1 }
+.btn { background: var(--panel2); border: 1px solid var(--line); padding: 7px 12px; border-radius: 9px; cursor: pointer }
+.btn:hover { border-color: #3a4152 }
+.btn.pri { background: #e8ebf2; color: #0b0d12; border-color: transparent; font-weight: 600 }
+.btn.bad { border-color: #5a2630; color: #ff9aa6 }
+select { background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px }
+.uso { display: flex; gap: 16px; cursor: pointer; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2) }
+.medidor { display: grid; grid-template-columns: auto 110px auto; align-items: center; gap: 8px; font-size: 12px; color: var(--dim) }
+.medidor b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 92px }
+.trilho { height: 7px; border-radius: 7px; background: #232836; overflow: hidden }
+.trilho i { display: block; height: 100%; width: 0; border-radius: 7px; background: var(--ok); transition: width .6s }
+.poderes { display: grid; gap: 6px; margin-top: 9px }
+.poderes label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer }
+.poderes small, .anexar small { color: var(--faint) }
+.selo { margin-right: 5px; font-size: 11px }
+.anexar { display: block; margin-top: 8px; padding: 9px 10px; border: 1px dashed #3a4152; border-radius: 10px; color: var(--dim);
+  font-size: 13px; cursor: pointer; text-align: center }
+.anexar.sobre { border-color: var(--zera); color: var(--ink); background: #0f2129 }
+#anexos { display: grid; gap: 8px; margin-top: 8px }
+.anx { display: grid; grid-template-columns: 54px 1fr 22px; gap: 8px; align-items: center; background: var(--panel2);
+  border: 1px solid var(--line); border-radius: 10px; padding: 6px }
+.anx img { width: 54px; height: 54px; object-fit: cover; border-radius: 7px }
+.anx input { width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line); padding: 4px 2px; font-size: 13px }
+.anx button { background: none; border: 0; color: var(--faint); cursor: pointer; font-size: 16px }
+.ajuste { display: flex; gap: 9px; align-items: flex-start; margin-top: 9px; padding: 9px 10px; border-radius: 10px;
+  background: #1a1830; border: 1px solid #3b3566; font-size: 13px; cursor: pointer }
+.ajuste small { color: var(--dim) }
+#painelAgente { position: absolute; z-index: 20; width: 520px; max-height: 60vh; display: flex; flex-direction: column;
+  background: #0f131b; border: 1px solid #3a4152; border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.6) }
+.pa-top { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-bottom: 1px solid var(--line) }
+.pa-sub { color: var(--dim); font-size: 12px }
+.pa-x { margin-left: auto; background: none; border: 0; color: var(--dim); font-size: 20px; cursor: pointer }
+.pa-lista { overflow-y: auto; padding: 8px 13px 14px }
+.pa-ev { padding: 8px 0; border-bottom: 1px dashed #1e2330 }
+.pa-ev.destaque { background: #10202a; border: 1px solid #1d4252; border-radius: 10px; padding: 9px 10px; margin-bottom: 8px }
+.pa-t { font-size: 11px; color: var(--faint); margin-bottom: 3px }
+.pa-ev pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 12.5px/1.5 var(--font); color: #d3d8e3 }
+.pa-ev.acao pre { font: 12px var(--mono); color: var(--dim) }
+/* paleta */
+aside.pal { border-right: 1px solid var(--line); padding: 14px 12px; overflow-y: auto; background: var(--panel) }
+.sec { font-size: 11px; font-weight: 600; letter-spacing: .8px; color: var(--faint); margin: 8px 4px 8px }
+.chip { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--panel2); margin-bottom: 8px; cursor: pointer; user-select: none }
+.chip:hover { border-color: #3a4152 }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none }
+.hint { color: var(--faint); font-size: 12px; margin: 14px 4px; line-height: 1.5 }
+/* canvas */
+main { position: relative; overflow: hidden;
+  background: radial-gradient(circle at 1px 1px, #1d2230 1px, transparent 0) 0 0 / 22px 22px }
+svg#fios { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none }
+svg#fios path { fill: none; stroke: #3b4357; stroke-width: 2.4; pointer-events: stroke; cursor: pointer }
+svg#fios path.ativo { stroke: var(--zera); stroke-dasharray: 8 7; animation: fluxo .7s linear infinite }
+svg#fios path:hover { stroke: var(--bad) }
+@keyframes fluxo { to { stroke-dashoffset: -15 } }
+.no { position: absolute; width: 196px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 11px 13px 12px; cursor: grab; user-select: none; box-shadow: 0 10px 30px rgba(0,0,0,.35); transition: box-shadow .2s, border-color .2s }
+.no.sel { border-color: #6b7690 }
+.no .top { display: flex; align-items: center; gap: 8px }
+.no .nm { font-weight: 600 }
+.no .md { font-size: 12px; color: var(--dim) }
+.no .ag { font-size: 12px; color: var(--dim); margin-top: 7px; min-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.no .tag { margin-left: auto; font-size: 10.5px; padding: 2px 7px; border-radius: 20px; background: var(--panel2); color: var(--dim); border: 1px solid var(--line) }
+.no.trabalhando { box-shadow: 0 0 0 1px var(--c), 0 0 26px -2px var(--c) }
+.no.trabalhando .tag { color: var(--bg); background: var(--c); border-color: var(--c) }
+.no.trabalhando .dot { animation: pulso 1s ease-in-out infinite }
+.no.pronto .tag, .no.entregou .tag { color: var(--ok); border-color: #1f5a3a }
+@keyframes pulso { 50% { transform: scale(1.6); opacity: .55 } }
+.porta { position: absolute; right: -8px; top: 50%; width: 15px; height: 15px; margin-top: -7.5px; border-radius: 50%;
+  background: var(--panel2); border: 2px solid #6b7690; cursor: crosshair }
+.porta:hover { background: var(--zera); border-color: var(--zera) }
+/* lado direito */
+aside.lado { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0 }
+.bloco { padding: 14px 16px; border-bottom: 1px solid var(--line) }
+.bloco h3 { margin: 0 0 9px; font-size: 12px; letter-spacing: .8px; color: var(--faint); font-weight: 600 }
+textarea { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; resize: vertical; min-height: 90px }
+input.txt { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; margin-bottom: 8px }
+.lin { display: flex; gap: 8px; align-items: center; margin-top: 9px }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px }
+.stat { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 9px }
+.stat b { display: block; font-size: 17px; font-variant-numeric: tabular-nums }
+.stat span { font-size: 11px; color: var(--dim) }
+.barra { height: 6px; border-radius: 6px; background: var(--panel2); margin-top: 10px; overflow: hidden }
+.barra i { display: block; height: 100%; width: 30%; background: linear-gradient(90deg, var(--sonnet), var(--zera), var(--haiku));
+  animation: indet 1.4s ease-in-out infinite }
+@keyframes indet { 0% { margin-left: -30% } 100% { margin-left: 100% } }
+.feed { flex: 1; overflow-y: auto; padding: 8px 16px 18px; min-height: 0 }
+.ev { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px dashed #1e2330 }
+.ev .t { font: 11px var(--mono); color: var(--faint); padding-top: 2px }
+.ev .q { font-size: 11.5px; font-weight: 600 }
+.ev .x { color: #c9cfdc; white-space: pre-wrap; word-break: break-word; font-size: 13px }
+.ev.acao .x { font: 12px var(--mono); color: var(--dim) }
+.ev.delegou .x { color: var(--ink) }
+.ev.fim .x { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; margin-top: 3px }
+.status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600 }
+.hist { max-height: 160px; overflow-y: auto }
+.abas { display: flex; gap: 4px; margin-bottom: 8px }
+.aba { flex: 1; background: transparent; border: 1px solid var(--line); color: var(--dim); border-radius: 8px; padding: 6px; cursor: pointer; font: inherit; font-size: 12px }
+.aba.on { background: var(--panel2); color: var(--txt, #fff); border-color: #3a3f4b }
+.trab { max-height: 300px; overflow-y: auto; display: grid; gap: 6px; margin-top: 6px }
+.trab .card { display: flex; gap: 10px; padding: 7px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; align-items: center }
+.trab .card:hover, .trab .card.on { background: var(--panel2); border-color: var(--line) }
+.trab .mini { width: 44px; height: 60px; border-radius: 6px; background: var(--panel2) center top / cover no-repeat; flex: none; border: 1px solid var(--line) }
+.trab .info { min-width: 0; font-size: 13px }
+.trab .info b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.trab .info small { color: var(--faint); font-size: 11px }
+.trab .nota { margin-left: auto; font-size: 11px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); color: var(--dim); white-space: nowrap }
+.hist div { padding: 7px 9px; border-radius: 8px; cursor: pointer; display: flex; gap: 8px; align-items: center; font-size: 13px }
+.hist div:hover { background: var(--panel2) }
+.hist small { color: var(--faint); margin-left: auto; white-space: nowrap }
+.vazio { color: var(--faint); font-size: 13px; padding: 10px 0 }
+#editor[hidden] { display: none }
+@media (max-width: 1100px) { .app { grid-template-columns: 160px 1fr 340px } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><i></i>Orquestra</div>
+    <select id="selFluxo"></select>
+    <button class="btn" id="btNovo">+ Novo fluxo</button>
+    <button class="btn" id="btSalvar">Salvar fluxo</button>
+    <div class="sp"></div>
+    <div class="uso" id="uso" title="Uso do seu plano Claude (o mesmo do app). Clique para atualizar.">
+      <div class="medidor"><span>Sessão (5 h)</span><div class="trilho"><i id="u5"></i></div><b id="u5t">—</b></div>
+      <div class="medidor"><span>Semana</span><div class="trilho"><i id="u7"></i></div><b id="u7t">—</b></div>
+    </div>
+  </header>
+
+  <aside class="pal">
+    <div class="sec">FONTES</div>
+    <div class="chip" data-add="fonte:Eu"><span class="dot" style="background:var(--eu)"></span>Eu</div>
+    <div class="chip" data-add="fonte:Zera"><span class="dot" style="background:var(--zera)"></span>Zera</div>
+    <div class="sec">AGENTES</div>
+    <div id="palModelos"></div>
+    <p class="hint">O primeiro agente ligado a uma fonte é o <b>diretor</b>: ele planeja, delega e revisa. Os agentes ligados ao diretor são a <b>equipe</b> que executa.</p>
+    <p class="hint">Ligue <b>Eu → Zera → diretor</b> para o Zera transformar o seu pedido curto num briefing completo antes.</p>
+  </aside>
+
+  <main id="canvas"><svg id="fios"></svg></main>
+
+  <aside class="lado">
+    <div class="bloco" id="editor" hidden>
+      <h3>AGENTE SELECIONADO</h3>
+      <input class="txt" id="edNome" placeholder="Nome (ex.: Programador)">
+      <select id="edModelo" style="width:100%;margin-bottom:8px"></select>
+      <textarea id="edPapel" placeholder="Papel do agente (o que ele faz)" style="min-height:70px"></textarea>
+      <div class="poderes">
+        <label><input type="checkbox" id="pInternet"> 🌐 Internet <small>pesquisar e abrir sites</small></label>
+        <label><input type="checkbox" id="pTerminal"> ⌨️ Terminal <small>rodar comandos e scripts</small></label>
+      </div>
+      <div class="lin"><button class="btn bad" id="edApagar">Remover</button></div>
+    </div>
+    <div class="bloco">
+      <h3>PEDIDO</h3>
+      <textarea id="prompt" placeholder="Ex.: Crie um site para a barbearia Navalha de Ouro, em São José dos Campos, estilo vintage…"></textarea>
+      <div id="anexos"></div>
+      <label class="anexar" id="zonaAnexo"><input type="file" id="arqAnexo" accept="image/*" multiple hidden>
+        📎 Anexar imagens <small>(ou arraste aqui, ou cole um print com Ctrl+V)</small></label>
+      <label class="ajuste" id="modoAjuste" hidden><input type="checkbox" id="chkAjuste" checked>
+        <span>✏️ <b>Ajustar este trabalho</b> <small id="ajusteNome"></small><br><small>desmarque para começar um trabalho novo</small></span></label>
+      <div class="lin"><button class="btn pri" id="btRodar">▶ Executar</button><button class="btn bad" id="btParar" hidden>Parar</button></div>
+    </div>
+    <div class="bloco" id="painelRun" hidden>
+      <div class="lin" style="margin:0"><span class="status" id="stTxt"></span><div style="flex:1"></div>
+        <button class="btn" id="btPasta">Pasta</button><button class="btn" id="btSite">Abrir site</button></div>
+      <div class="barra" id="barra"><i></i></div>
+      <div class="stats">
+        <div class="stat"><b id="sTempo">0:00</b><span>tempo</span></div>
+        <div class="stat"><b id="sEntregas">0</b><span>delegações</span></div>
+        <div class="stat"><b id="sAcoes">0</b><span>ações</span></div>
+        <div class="stat"><b id="sArq">0</b><span>arquivos</span></div>
+      </div>
+    </div>
+    <div class="feed" id="feed"><p class="vazio">Monte o fluxo, escreva o pedido e clique em Executar. Tudo o que os agentes fizerem aparece aqui, ao vivo.</p></div>
+    <div class="bloco" style="border-top:1px solid var(--line);border-bottom:0">
+      <div class="abas"><button class="aba on" data-aba="trab">Trabalhos</button><button class="aba" data-aba="hist">Execuções</button></div>
+      <div id="abaTrab"><input class="txt" id="busca" placeholder="🔎 Buscar cliente (ex.: pilates, Moove)…">
+        <div class="trab" id="trab"></div></div>
+      <div class="hist" id="hist" hidden></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const COR = { "Opus 5.5": "var(--opus)", "Fable 5.1": "var(--fable)", "Sonnet 5.5": "var(--sonnet)", "Haiku 5.5": "var(--haiku)", Eu: "var(--eu)", Zera: "var(--zera)" };
+let FLUXOS = [], MODELOS = [], F = null, sel = null, run = null, desde = 0, timer = null;
+
+async function api(caminho, corpo) {
+  const r = await fetch(caminho, corpo ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) } : {});
+  return r.json();
+}
+
+async function carregar(manter) {
+  const d = await api("/api/fluxos");
+  FLUXOS = d.fluxos; MODELOS = d.modelos;
+  $("#palModelos").innerHTML = MODELOS.map(m => `<div class="chip" data-add="agente:${m}"><span class="dot" style="background:${COR[m]}"></span>${m}</div>`).join("")
+    + `<div class="chip" data-add="juiz:Opus 5.5" title="Avalia o trabalho do diretor, dá nota e manda corrigir (ligue o diretor a ele)">⚖️ Juiz</div>`;
+  $("#edModelo").innerHTML = MODELOS.map(m => `<option>${m}</option>`).join("");
+  document.querySelectorAll("[data-add]").forEach(c => c.onclick = () => adicionar(...c.dataset.add.split(":")));
+  $("#selFluxo").innerHTML = FLUXOS.map(f => `<option value="${f.id}">${esc(f.nome)}</option>`).join("");
+  F = structuredClone(FLUXOS.find(f => f.id === (manter || F?.id)) || FLUXOS[0]);
+  $("#selFluxo").value = F.id;
+  desenhar();
+}
+
+function adicionar(tipo, nome) {
+  const id = tipo + Math.random().toString(36).slice(2, 7);
+  const no = tipo === "juiz" ? { id, tipo: "agente", juiz: true, nome: "Juiz", modelo: nome, meta: 8, rodadas: 2, poderes: { terminal: true }, papel: "Critérios: o que deixa este trabalho excelente para o cliente.", x: 480, y: 420 }
+    : tipo === "fonte" ? { id, tipo, nome, x: 60, y: 60 + 90 * F.nos.length % 400 }
+    : { id, tipo, nome: "Agente", modelo: nome, papel: "", x: 340 + (F.nos.length % 3) * 40, y: 80 + (F.nos.length % 5) * 70 };
+  F.nos.push(no); sel = no.tipo === "agente" ? id : sel; desenhar(); editor();
+}
+
+function desenhar() {
+  const cv = $("#canvas");
+  cv.querySelectorAll(".no").forEach(n => n.remove());
+  const estados = run ? run.agentes : {};
+  for (const n of F.nos) {
+    const st = estados[n.id] || {};
+    const cor = n.tipo === "fonte" ? COR[n.nome] : COR[n.modelo];
+    const d = document.createElement("div");
+    d.className = `no ${n.id === sel ? "sel" : ""} ${st.estado || ""}`;
+    d.style.left = n.x + "px"; d.style.top = n.y + "px"; d.style.setProperty("--c", cor);
+    d.dataset.id = n.id;
+    d.innerHTML = `<div class="top"><span class="dot" style="background:${cor}"></span><span class="nm">${esc(n.tipo === "fonte" ? n.nome : n.nome)}</span>
+      <span class="tag">${esc(st.estado || (n.tipo === "fonte" ? "fonte" : papelDe(n)))}</span></div>
+      <div class="md">${n.poderes?.internet ? '<span class="selo" title="Internet">🌐</span>' : ""}${n.poderes?.terminal ? '<span class="selo" title="Terminal">⌨️</span>' : ""}${n.tipo === "fonte" ? (n.nome === "Zera" ? (F.ligacoes.some(([a, b]) => b === n.id) ? "melhora o seu pedido" : "pedidos por voz") : "seu pedido escrito") : esc(n.modelo)}</div>
+      <div class="ag">${esc(st.agora || (n.tipo === "agente" ? (n.papel || "").slice(0, 60) : ""))}</div><div class="porta"></div>`;
+    cv.appendChild(d);
+    arrastar(d, n);
+  }
+  fios();
+}
+
+function papelDe(n) {
+  const fontes = F.nos.filter(x => x.tipo === "fonte").map(x => x.id);
+  if (n.juiz) return "juiz · meta " + (n.meta || 8);
+  if (F.ligacoes.some(([a, b]) => fontes.includes(a) && b === n.id)) return "diretor";
+  return F.ligacoes.some(([a, b]) => b === n.id) ? "equipe" : "solto";
+}
+
+function centro(id, lado) {
+  const el = document.querySelector(`.no[data-id="${id}"]`);
+  if (!el) return null;
+  return { x: el.offsetLeft + (lado === "dir" ? el.offsetWidth : 0), y: el.offsetTop + el.offsetHeight / 2 };
+}
+
+function fios(temp) {
+  const svg = $("#fios");
+  const ativos = new Set();
+  if (run) for (const [a, b] of F.ligacoes) if (run.agentes[b]?.estado === "trabalhando") ativos.add(a + ">" + b);
+  let h = "";
+  F.ligacoes.forEach(([a, b], i) => {
+    const p = centro(a, "dir"), q = centro(b, "esq");
+    if (!p || !q) return;
+    const dx = Math.max(60, (q.x - p.x) / 2);
+    h += `<path data-i="${i}" class="${ativos.has(a + ">" + b) ? "ativo" : ""}" d="M${p.x},${p.y} C${p.x + dx},${p.y} ${q.x - dx},${q.y} ${q.x},${q.y}" marker-end="url(#seta)"/>`;
+  });
+  if (temp) h += `<path d="M${temp.x1},${temp.y1} L${temp.x2},${temp.y2}" style="stroke:var(--zera);stroke-dasharray:5 5"/>`;
+  svg.innerHTML = `<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#5b647a" stroke="none"/></marker></defs>` + h;
+  svg.querySelectorAll("path[data-i]").forEach(p => p.onclick = () => { F.ligacoes.splice(+p.dataset.i, 1); desenhar(); });
+}
+
+function arrastar(el, n) {
+  el.onmousedown = e => {
+    if (e.target.classList.contains("porta")) return ligar(e, n);
+    sel = n.id; editor();
+    document.querySelectorAll(".no").forEach(x => x.classList.toggle("sel", x === el));
+    const ox = e.clientX - n.x, oy = e.clientY - n.y, x0 = e.clientX, y0 = e.clientY;
+    const mv = ev => { n.x = Math.max(0, ev.clientX - ox); n.y = Math.max(0, ev.clientY - oy); el.style.left = n.x + "px"; el.style.top = n.y + "px"; fios(); if (aberto === n.id) abrirPainel(n.id, true); };
+    const up = ev => {
+      removeEventListener("mousemove", mv); removeEventListener("mouseup", up);
+      const clique = Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 5;
+      if (clique && run) (aberto === n.id ? fecharPainel() : abrirPainel(n.id));
+    };
+    addEventListener("mousemove", mv); addEventListener("mouseup", up);
+  };
+}
+
+function ligar(e, n) {
+  e.stopPropagation();
+  const r = $("#canvas").getBoundingClientRect(), p = centro(n.id, "dir");
+  const mv = ev => fios({ x1: p.x, y1: p.y, x2: ev.clientX - r.left, y2: ev.clientY - r.top });
+  const up = ev => {
+    removeEventListener("mousemove", mv); removeEventListener("mouseup", up);
+    const alvo = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(".no");
+    const b = alvo && F.nos.find(x => x.id === alvo.dataset.id);
+    // agentes recebem ligação de qualquer card; o Zera recebe do "Eu" (ele melhora o seu pedido antes do diretor)
+    const pode = b && (b.tipo === "agente" || (b.nome === "Zera" && n.nome === "Eu"));
+    if (pode && b.id !== n.id && !F.ligacoes.some(([x, y]) => x === n.id && y === b.id)) F.ligacoes.push([n.id, b.id]);
+    desenhar();
+  };
+  addEventListener("mousemove", mv); addEventListener("mouseup", up);
+}
+
+function editor() {
+  const n = F.nos.find(x => x.id === sel);
+  $("#editor").hidden = !n || n.tipo !== "agente";
+  if (!n || n.tipo !== "agente") return;
+  $("#edNome").value = n.nome; $("#edModelo").value = n.modelo; $("#edPapel").value = n.papel || "";
+  $("#pInternet").checked = !!n.poderes?.internet; $("#pTerminal").checked = !!n.poderes?.terminal;
+}
+$("#edNome").oninput = e => { F.nos.find(x => x.id === sel).nome = e.target.value; desenhar(); };
+$("#edModelo").onchange = e => { F.nos.find(x => x.id === sel).modelo = e.target.value; desenhar(); };
+$("#edPapel").oninput = e => { F.nos.find(x => x.id === sel).papel = e.target.value; };
+for (const [el, poder] of [["#pInternet", "internet"], ["#pTerminal", "terminal"]])
+  $(el).onchange = e => { const n = F.nos.find(x => x.id === sel); n.poderes = { ...(n.poderes || {}), [poder]: e.target.checked }; desenhar(); };
+$("#edApagar").onclick = () => { F.nos = F.nos.filter(x => x.id !== sel); F.ligacoes = F.ligacoes.filter(([a, b]) => a !== sel && b !== sel); sel = null; editor(); desenhar(); };
+$("#selFluxo").onchange = e => { F = structuredClone(FLUXOS.find(f => f.id === e.target.value)); sel = null; editor(); desenhar(); };
+$("#btNovo").onclick = () => {
+  const nome = prompt("Nome do novo fluxo:"); if (!nome) return;
+  F = { id: undefined, nome, nos: [{ id: "eu", tipo: "fonte", nome: "Eu", x: 60, y: 160 }, { id: "zera", tipo: "fonte", nome: "Zera", x: 60, y: 300 }], ligacoes: [] };
+  sel = null; editor(); desenhar();
+};
+$("#btSalvar").onclick = async () => { const f = await api("/api/fluxos", F); await carregar(f.id); };
+
+// ---------- anexos (logo, prints do Instagram, referências) ----------
+let ANEXOS = [];
+async function anexar(arquivos) {
+  for (const f of arquivos) {
+    if (!f.type.startsWith("image/")) continue;
+    const dados = await new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(f); });
+    const nome = (f.name && f.name !== "image.png") ? f.name : `print-${Date.now()}.png`;
+    const r = await api("/api/anexos", { nome, dados });
+    if (r.id) ANEXOS.push({ id: r.id, nome: r.nome, previa: dados, descricao: "" });
+  }
+  pintarAnexos();
+}
+function pintarAnexos() {
+  $("#anexos").innerHTML = ANEXOS.map((a, i) => `<div class="anx"><img src="${a.previa}" alt="">
+    <input data-i="${i}" value="${esc(a.descricao)}" placeholder="O que é? Ex.: logo do cliente / Instagram: usar estas cores">
+    <button data-x="${i}" title="Remover">×</button></div>`).join("");
+  $("#anexos").querySelectorAll("input").forEach(x => x.oninput = e => ANEXOS[+e.target.dataset.i].descricao = e.target.value);
+  $("#anexos").querySelectorAll("button").forEach(x => x.onclick = () => { ANEXOS.splice(+x.dataset.x, 1); pintarAnexos(); });
+}
+$("#arqAnexo").onchange = e => { anexar(e.target.files); e.target.value = ""; };
+const zona = $("#zonaAnexo");
+zona.ondragover = e => { e.preventDefault(); zona.classList.add("sobre"); };
+zona.ondragleave = () => zona.classList.remove("sobre");
+zona.ondrop = e => { e.preventDefault(); zona.classList.remove("sobre"); anexar(e.dataTransfer.files); };
+document.addEventListener("paste", e => { const imgs = [...e.clipboardData.files].filter(f => f.type.startsWith("image/")); if (imgs.length) { e.preventDefault(); anexar(imgs); } });
+
+// ---------- execução ao vivo ----------
+const mmss = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+$("#btRodar").onclick = async () => {
+  const prompt = $("#prompt").value.trim();
+  if (!prompt) return $("#prompt").focus();
+  if (!F.id) { const f = await api("/api/fluxos", F); await carregar(f.id); }
+  else await api("/api/fluxos", F);
+  const ajuste = run && run.status !== "rodando" && $("#chkAjuste").checked;
+  const r = await api("/api/executar", { fluxo: F.id, prompt, continuar: ajuste ? run.id : "",
+    anexos: ANEXOS.map(a => ({ id: a.id, nome: a.nome, descricao: a.descricao })) });
+  $("#prompt").value = "";
+  if (r.erro) return alert(r.erro);
+  ANEXOS = []; pintarAnexos();
+  acompanhar(r.id, true);
+};
+$("#btParar").onclick = () => run && api("/api/parar", { id: run.id });
+$("#btPasta").onclick = () => run && api("/api/abrir", { id: run.id });
+$("#btSite").onclick = () => run && api("/api/abrir", { id: run.id, site: true });
+
+let TODOS = [], aberto = null;  // todos os eventos da execução aberta; agente com o painel aberto
+
+function abrirPainel(id, atualizar) {
+  const no = F.nos.find(n => n.id === id), a = run?.agentes?.[id];
+  if (!no || !run) return;
+  aberto = id;
+  let p = $("#painelAgente");
+  if (!p) { p = document.createElement("div"); p.id = "painelAgente"; $("#canvas").appendChild(p); }
+  const card = document.querySelector(`.no[data-id="${id}"]`);
+  p.style.left = Math.max(8, card.offsetLeft - 60) + "px"; p.style.top = (card.offsetTop + card.offsetHeight + 10) + "px";
+  const meus = TODOS.filter(e => e.agente === id);
+  const cor = COR[a?.modelo] || COR[no.nome] || "var(--dim)";
+  const rolagem = atualizar ? p.querySelector(".pa-lista")?.scrollTop : 0;
+  let extra = "";
+  if (no.nome === "Zera" && run.prompt_refinado)
+    extra = `<div class="pa-ev destaque"><div class="pa-t">Briefing que o Zera escreveu para o diretor</div><pre>${esc(run.prompt_refinado)}</pre></div>`;
+  if (no.tipo === "fonte" && no.nome === "Eu")
+    extra = `<div class="pa-ev destaque"><div class="pa-t">Seu pedido</div><pre>${esc(run.prompt)}</pre></div>`;
+  p.innerHTML = `<div class="pa-top"><span class="dot" style="background:${cor}"></span><b>${esc(no.nome)}</b>
+      <span class="pa-sub">${esc(a?.modelo || "")} · ${esc(a?.estado || "")} · ${a?.acoes ?? 0} ações</span>
+      <button class="pa-x" title="Fechar">×</button></div>
+    <div class="pa-lista">${extra}${meus.map(e => `<div class="pa-ev ${e.tipo}"><div class="pa-t">${mmss(Math.round(e.t))} · ${{ inicio: "início", texto: "pensou", delegou: "pediu à equipe", acao: "fez", entregou: "entregou", nota: "nota do juiz", fim: "resultado", erro: "erro" }[e.tipo] || e.tipo}</div>
+      <pre>${esc(e.completo || e.texto)}</pre></div>`).join("") || (extra ? "" : '<p class="vazio">Nada registrado para este agente nesta execução.</p>')}</div>`;
+  if (rolagem) p.querySelector(".pa-lista").scrollTop = rolagem;
+  p.querySelector(".pa-x").onclick = ev => { ev.stopPropagation(); fecharPainel(); };
+}
+function fecharPainel() { aberto = null; $("#painelAgente")?.remove(); }
+
+function acompanhar(id, limpar) {
+  fecharPainel();
+  clearInterval(timer); desde = 0; run = null;
+  if (limpar !== false) $("#feed").innerHTML = "";
+  const passo = async () => {
+    const r = await api(`/api/execucoes/${id}?desde=${desde}`);
+    if (r.erro) return;
+    if (!run || run.fluxo_id !== r.fluxo_id) {
+      const f = FLUXOS.find(x => x.id === r.fluxo_id); if (f && F.id !== f.id) { F = structuredClone(f); $("#selFluxo").value = f.id; }
+      $("#feed").innerHTML = "";
+    }
+    if (desde === 0) TODOS = [];
+    run = r; desde += r.eventos.length;
+    TODOS.push(...r.eventos);
+    for (const e of r.eventos) evento(e);
+    if (aberto) abrirPainel(aberto, true);
+    painel(); desenhar();
+    if (r.status !== "rodando") { clearInterval(timer); historico(); }
+  };
+  passo(); timer = setInterval(passo, 1000);
+}
+
+function evento(e) {
+  const a = run.agentes[e.agente] || { nome: "?" };
+  const cor = COR[a.modelo] || "var(--dim)";
+  const d = document.createElement("div");
+  d.className = "ev " + e.tipo;
+  d.innerHTML = `<div class="t">${mmss(Math.round(e.t))}</div><div><div class="q" style="color:${cor}">${esc(a.nome)} · ${esc(a.modelo || "")}</div><div class="x">${esc(e.texto)}</div></div>`;
+  const feed = $("#feed"), embaixo = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 60;
+  feed.appendChild(d);
+  if (embaixo) feed.scrollTop = feed.scrollHeight;
+}
+
+function modoAjuste() {
+  const pode = run && run.status !== "rodando";
+  $("#modoAjuste").hidden = !pode;
+  if (pode) $("#ajusteNome").textContent = "(" + run.titulo.slice(0, 60) + ")";
+  $("#btRodar").textContent = pode && $("#chkAjuste").checked ? "✏️ Pedir ajuste" : "▶ Executar";
+}
+$("#chkAjuste").onchange = modoAjuste;
+
+function painel() {
+  modoAjuste();
+  $("#painelRun").hidden = false;
+  const rodando = run.status === "rodando";
+  $("#stTxt").innerHTML = rodando ? `<span class="dot" style="background:var(--zera);animation:pulso 1s infinite"></span>Trabalhando…`
+    : run.status === "concluido" ? `<span class="dot" style="background:var(--ok)"></span>Concluído` : `<span class="dot" style="background:var(--bad)"></span>Parou`;
+  $("#barra").style.display = rodando ? "block" : "none";
+  $("#btParar").hidden = !rodando;
+  $("#sTempo").textContent = mmss(run.duracao);
+  $("#sEntregas").textContent = run.entregas;
+  $("#sAcoes").textContent = Object.values(run.agentes).reduce((s, a) => s + a.acoes, 0);
+  $("#sArq").textContent = run.arquivos.length;
+}
+
+async function historico() {
+  const d = await api("/api/execucoes");
+  $("#hist").innerHTML = d.execucoes.map(e => `<div data-id="${e.id}"><span class="dot" style="background:${e.status === "rodando" ? "var(--zera)" : e.status === "concluido" ? "var(--ok)" : "var(--bad)"}"></span>
+    ${esc(e.titulo)}<small>${e.origem === "zera" ? "Zera · " : ""}${mmss(e.duracao)}</small></div>`).join("") || '<p class="vazio">Nenhuma ainda.</p>';
+  $("#hist").querySelectorAll("[data-id]").forEach(x => x.onclick = () => acompanhar(x.dataset.id));
+  trabalhosLista();
+  const rodando = d.execucoes.find(e => e.status === "rodando");
+  if (rodando && (!run || run.id !== rodando.id) && !timer) acompanhar(rodando.id);
+}
+
+// ---------- trabalhos (um por cliente/pasta): clica e já fica pronto para ajustar ----------
+let TRAB = [];
+function quando(ts) {
+  const dias = Math.floor((Date.now() / 1000 - ts) / 86400);
+  return dias <= 0 ? "hoje" : dias === 1 ? "ontem" : dias < 30 ? `há ${dias} dias` : new Date(ts * 1000).toLocaleDateString("pt-BR");
+}
+const semAcento = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+async function trabalhosLista() {
+  const d = await api("/api/trabalhos"); TRAB = d.trabalhos || []; pintarTrab();
+}
+function pintarTrab() {
+  const q = semAcento($("#busca").value.trim());
+  const lista = TRAB.filter(t => !q || semAcento(t.nome + " " + t.fluxo).includes(q));
+  $("#trab").innerHTML = lista.map(t => `<div class="card ${run && run.id === t.id ? "on" : ""}" data-id="${t.id}">
+      <div class="mini" style="${t.print ? `background-image:url('/api/print/${t.id}')` : ""}"></div>
+      <div class="info"><b>${t.status === "rodando" ? "⏳ " : ""}${esc(t.nome)}</b>
+        <small>${esc(t.fluxo.split(" (")[0])} · ${quando(t.mexido)}${t.ajustes ? ` · ${t.ajustes} ajuste${t.ajustes > 1 ? "s" : ""}` : ""}</small></div>
+      ${t.nota != null ? `<span class="nota" title="nota do juiz">⚖️ ${t.nota}</span>` : ""}</div>`).join("")
+    || `<p class="vazio">${q ? "Nada com esse nome." : "Nenhum trabalho ainda."}</p>`;
+  $("#trab").querySelectorAll("[data-id]").forEach(x => x.onclick = () => {
+    acompanhar(x.dataset.id); $("#chkAjuste").checked = true;
+    setTimeout(() => { pintarTrab(); $("#prompt").focus(); $("#prompt").placeholder = "O que o cliente quer mudar? (ex.: trocar o telefone, colocar a foto nova da fachada…)"; }, 400);
+  });
+}
+$("#busca").oninput = pintarTrab;
+document.querySelectorAll(".aba").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".aba").forEach(x => x.classList.toggle("on", x === b));
+  $("#abaTrab").hidden = b.dataset.aba !== "trab"; $("#hist").hidden = b.dataset.aba !== "hist";
+});
+
+// ---------- uso do plano ----------
+function renova(ts) {
+  if (!ts) return "";
+  const d = new Date(ts * 1000), hoje = new Date();
+  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return d.toDateString() === hoje.toDateString() ? hora : d.toLocaleDateString("pt-BR", { weekday: "short" }) + " " + hora;
+}
+function pintarUso(u) {
+  for (const [k, el] of [["five_hour", "u5"], ["seven_day", "u7"]]) {
+    const j = u[k]; if (!j) continue;
+    const bar = $("#" + el);
+    bar.style.width = Math.min(100, j.usado) + "%";
+    bar.style.background = j.usado >= 85 ? "var(--bad)" : j.usado >= 60 ? "#ffb020" : "var(--ok)";
+    $("#" + el + "t").textContent = `${j.usado}% · renova ${renova(j.renova)}`;
+  }
+}
+async function uso(atualizar) { const u = await api("/api/uso" + (atualizar ? "?atualizar=1" : "")); if (u && Object.keys(u).length) pintarUso(u); }
+$("#uso").onclick = () => { $("#u5t").textContent = "atualizando…"; uso(true); };
+uso(true); setInterval(() => uso(false), 15000);
+
+carregar().then(historico);
+setInterval(() => { if (!run || run.status !== "rodando") historico(); }, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.log
+# dados de uso (ficam em ~/Orquestra por padrão, mas por garantia)
+trabalhos/
+licoes/
+_anexos/
+fluxos.json
+.claude/
